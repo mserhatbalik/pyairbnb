@@ -1,52 +1,33 @@
 import pyairbnb
 import json
-from urllib.parse import urlparse, parse_qs
+
+# Define search parameters
+currency = "USD"
+check_in = "2025-01-13"
+check_out = "2025-01-17"
+ne_lat = 26.244992525492258
+ne_long = -80.20554283078371
+sw_lat = 26.052735877248157
+sw_long = -80.39148365866907
+zoom_value = 12
+
+# Search listings within specified coordinates and date range
+search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, "")
+
+# Save the search results as a JSON file
+with open('search_results.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(search_results))  # Convert results to JSON and write to file
 
 
-def test0():
-    room_id=668146487515150072
-    currency="MXN"
-    check_in = "2024-11-04"
-    check_out = "2024-11-10"
-    data = pyairbnb.get_details_from_id(room_id,currency,check_in,check_out,"")
-    with open('details.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(data))
+api_key = pyairbnb.get_api_key("")
 
+experiences = pyairbnb.search_experience("Estados Unidos", check_in, check_out, currency,api_key, "")
 
-def test1():
-    room_id=668146487515150072
-    currency="MXN"
-    check_in = "2024-11-02"
-    check_out = "2024-11-10"
-    proxy_url = pyairbnb.parse_proxy("[IP or domain]","[port]","[user name]","[password]")
-    data = pyairbnb.get_details_from_id(room_id,currency,check_in,check_out,proxy_url)
-    with open('details.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(data))
+with open('experiences.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(experiences))  # Convert results to JSON and write to file
 
-def test11():
-    room_url="https://www.airbnb.com/rooms/762251620189545147"
-    currency="MXN"
-    check_in = "2024-11-02"
-    check_out = "2024-11-10"
-    data = pyairbnb.get_details_from_url(room_url,currency,check_in,check_out,"")
-    with open('details.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(data))
+listings = pyairbnb.get_listings_from_user(71501403,api_key,"")
 
+with open('listings.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(listings))  # Convert results to JSON and write to file
 
-def test2():
-    currency="MXN"
-    check_in = "2024-11-04"
-    check_out = "2024-11-10"
-    ne_lat = -1.03866277790021
-    ne_long = -77.53091734683608
-    sw_lat = -1.1225978433925647
-    sw_long = -77.59713412765507
-    zoom_value = 2
-    results = pyairbnb.search_all(check_in,check_out,ne_lat,ne_long,sw_lat,sw_long,zoom_value, currency,"")
-    with open('search_all.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(results))
-
-def test3():
-    calendar_data = pyairbnb.get_calendar("762251620189545147","")
-    with open('calendar_data.json', 'w', encoding='utf-8') as f:
-        f.write(json.dumps(calendar_data))

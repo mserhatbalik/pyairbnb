@@ -65,6 +65,29 @@ with open('reviews.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(data["reviews"]))
 ```
 
+### Getting listings from user id
+```Python
+import pyairbnb
+import json
+host_id = 0
+api_key = pyairbnb.get_api_key("")
+listings = pyairbnb.get_listings_from_user(host_id,api_key,"")
+with open('listings.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(listings))
+```
+
+### Getting experience from user id
+```Python
+import pyairbnb
+import json
+check_in = "2025-04-10"
+check_out = "2025-04-12"
+api_key = pyairbnb.get_api_key("")
+experiences = pyairbnb.search_experience("Estados Unidos",check_in,check_out,"EUR",api_key,"")
+with open('experiences.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(experiences))
+```
+
 ### Getting available/unavailable, along with metadata
 ```Python
 import pyairbnb
