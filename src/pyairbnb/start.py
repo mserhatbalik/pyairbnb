@@ -6,107 +6,153 @@ import pyairbnb.api as api
 import pyairbnb.search as search
 import pyairbnb.standardize as standardize
 import pyairbnb.calendar as calendar
+import pyairbnb.host_details as host_details
 from datetime import datetime
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse
 
-def search_all(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, currency:str, proxy_url:str):
-    api_key = api.get(proxy_url)
-    all_results = []
-    cursor = ""
-    while True:
-        results_raw = search.get(check_in,check_out,ne_lat,ne_long,sw_lat,sw_long,zoom_value,cursor, currency, api_key, proxy_url)
-        results = standardize.from_search(results_raw.get("searchResults",[]))
-        all_results = all_results + results
-        if len(results)==0 or "nextPageCursor" not in results_raw["paginationInfo"] or  results_raw["paginationInfo"]["nextPageCursor"] is None:
-            break
-        cursor = results_raw["paginationInfo"]["nextPageCursor"]
-    return all_results
+def get_calendar(room_id: str, proxy_url: str = "" ,api_key: str = ""):
+    """
+    Retrieves the calendar data for a specified room.
 
-def search_first_page(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, cursor:str, currency:str, proxy_url:str):
-    api_key = api.get(proxy_url)
-    results = search.get(check_in,check_out,ne_lat,ne_long,sw_lat,sw_long,zoom_value,"", currency, api_key, proxy_url)
-    results = standardize.from_search(results)
-    return results
+    Args:
+        room_id (str): The room ID.
+        api_key (str): The API key.
+        proxy_url (str): The proxy URL.
 
-def get_reviews(room_url: str, proxy_url: str):
-    data, price_input, cookies = details.get(room_url, proxy_url)#in order not to waste data from this request, I return also this metadata
-    product_id = price_input["product_id"]
-    api_key = price_input["api_key"]
-    reviews_data = reviews.get(product_id,api_key,proxy_url)
-    data["reviews"] = reviews_data
-    return data
-
-def get_calendar(room_url: str, proxy_url: str):
-    data, price_input, cookies = details.get(room_url, proxy_url)#in order not to waste data from this request, I return also this metadata
-    api_key = price_input["api_key"]
-
-    parsed_url = urlparse(room_url)
-    path = parsed_url.path
-    splited = path.split("/")
-    room_id = splited[len(splited)-1]
+    Returns:
+        dict: Calendar data.
+    """
+    if not api_key:
+        api_key = api.get(proxy_url)
 
     current_month = datetime.now().month
     current_year = datetime.now().year
-    calendar_data = calendar.get(room_id,current_month,current_year,api_key,proxy_url)
-    data["calendar"] = calendar_data
-    return data
+    return calendar.get(room_id, current_month, current_year, api_key, proxy_url)
 
-def get_details_from_url(room_url: str, currency: str, check_in: str, check_out: str, proxy_url: str):
+def get_reviews(product_id: str, proxy_url: str = "" ,api_key: str = ""):
+    """
+    Retrieves review data for a specified product.
+
+    Args:
+        product_id (str): The product ID.
+        api_key (str): The API key.
+        proxy_url (str): The proxy URL.
+
+    Returns:
+        dict: Reviews data.
+    """
+    if not api_key:
+        api_key = api.get(proxy_url)
+
+    return reviews.get(product_id, api_key, proxy_url)
+
+def get_details(room_url: str = None, room_id: int = None, domain: str = "www.airbnb.com",
+                currency: str = None, check_in: str = None, check_out: str = None, proxy_url: str = None):
+    """
+    Retrieves all details (calendar, reviews, price, and host details) for a specified room.
+
+    Args:
+        room_url (str): The room URL (optional if room_id is provided).
+        room_id (int): The room ID (optional if room_url is provided).
+        domain (str): The domain (default is 'www.airbnb.com').
+        currency (str): Currency for pricing information.
+        check_in (str): Check-in date for price information.
+        check_out (str): Check-out date for price information.
+        proxy_url (str): Proxy URL.
+
+    Returns:
+        dict: A dictionary with all room details.
+    """
+    if not room_url and room_id is None:
+        raise ValueError("Either room_url or room_id must be provided.")
+    
+    if not room_url:
+        room_url = f"https://{domain}/rooms/{room_id}"
+    
     data, price_input, cookies = details.get(room_url, proxy_url)
     product_id = price_input["product_id"]
     api_key = price_input["api_key"]
     
-    parsed_url = urlparse(room_url)
-    path = parsed_url.path
-    splited = path.split("/")
-    room_id = splited[len(splited)-1]
-
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    calendar_data = calendar.get(room_id,current_month,current_year,api_key,proxy_url)
-    data["calendar"] = calendar_data
-
-    reviews_data = reviews.get(product_id,api_key,proxy_url)
-    data["reviews"] = reviews_data
-    if check_in is None or check_in == "" or check_out is None or check_out == "":
-        return data
-    price_data = price.get(product_id,price_input["impression_id"],api_key,currency, cookies, check_in, check_out, proxy_url)
-    data["price"] = price_data
+    # Extract room_id from URL if not provided
+    if room_id is None:
+        parsed_url = urlparse(room_url)
+        path = parsed_url.path
+        room_id = path.split("/")[-1]
+    
+    # Get calendar and reviews data
+    data["calendar"] = get_calendar(room_id, api_key, proxy_url)
+    data["reviews"] = get_reviews(product_id, api_key, proxy_url)
+    
+    # Get price data if check-in and check-out dates are provided
+    if check_in and check_out:
+        price_data = price.get(
+            product_id, price_input["impression_id"], api_key, currency, cookies,
+            check_in, check_out, proxy_url
+        )
+        data["price"] = price_data
+    
+    # Get host details
+    host_id = data["host"]["id"]
+    data["host_details"] = host_details.get(host_id, api_key, proxy_url, cookies)
+    
     return data
 
-def get_details_from_id(room_id: int, currency: str, check_in: str, check_out: str, proxy_url: str):
-    room_url = f"https://www.airbnb.com/rooms/{room_id}"
-    data, price_input, cookies = details.get(room_url, proxy_url)
-    product_id = price_input["product_id"]
-    api_key = price_input["api_key"]
+def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
+               zoom_value: int, currency: str, proxy_url: str):
+    """
+    Performs a paginated search for all rooms within specified geographic bounds.
 
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    calendar_data = calendar.get(room_id,current_month,current_year,api_key,proxy_url)
-    data["calendar"] = calendar_data
+    Args:
+        check_in (str): Check-in date.
+        check_out (str): Check-out date.
+        ne_lat (float): Latitude of northeast corner.
+        ne_long (float): Longitude of northeast corner.
+        sw_lat (float): Latitude of southwest corner.
+        sw_long (float): Longitude of southwest corner.
+        zoom_value (int): Zoom level.
+        currency (str): Currency for pricing information.
+        proxy_url (str): Proxy URL.
 
-    reviews_data = reviews.get(product_id,api_key,proxy_url)
-    data["reviews"] = reviews_data
-    if check_in is None or check_in == "" or check_out is None or check_out == "":
-        return data
-    price_data = price.get(product_id,price_input["impression_id"],api_key,currency, cookies, check_in, check_out, proxy_url)
-    data["price"] = price_data
-    return data
+    Returns:
+        list: A list of all search results.
+    """
+    api_key = api.get(proxy_url)
+    all_results = []
+    cursor = ""
+    while True:
+        results_raw = search.get(
+            check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value,
+            cursor, currency, api_key, proxy_url
+        )
+        results = standardize.from_search(results_raw.get("searchResults", []))
+        all_results.extend(results)
+        if not results or "nextPageCursor" not in results_raw["paginationInfo"] or results_raw["paginationInfo"]["nextPageCursor"] is None:
+            break
+        cursor = results_raw["paginationInfo"]["nextPageCursor"]
+    return all_results
 
+def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: float,
+                      sw_lat: float, sw_long: float, zoom_value: int, currency: str, proxy_url: str):
+    """
+    Searches the first page of results within specified geographic bounds.
 
-def get_details_from_id_and_domain(room_id: int, domain: str, currency: str, check_in: str, check_out: str, proxy_url: str):
-    room_url = f"https://{domain}/rooms/{room_id}"
-    data, price_input, cookies = details.get(room_url, proxy_url)
-    product_id = price_input["product_id"]
-    api_key = price_input["api_key"]
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    calendar_data = calendar.get(room_id,current_month,current_year,api_key,proxy_url)
-    data["calendar"] = calendar_data
-    reviews_data = reviews.get(product_id,api_key,proxy_url)
-    data["reviews"] = reviews_data
-    if check_in is None or check_in == "" or check_out is None or check_out == "":
-        return data
-    price_data = price.get(product_id,price_input["impression_id"],api_key,currency, cookies, check_in, check_out, proxy_url)
-    data["price"] = price_data
-    return data
+    Args:
+        check_in (str): Check-in date.
+        check_out (str): Check-out date.
+        ne_lat (float): Latitude of northeast corner.
+        ne_long (float): Longitude of northeast corner.
+        sw_lat (float): Latitude of southwest corner.
+        sw_long (float): Longitude of southwest corner.
+        zoom_value (int): Zoom level.
+        currency (str): Currency for pricing information.
+        proxy_url (str): Proxy URL.
+
+    Returns:
+        list: A list of search results from the first page.
+    """
+    api_key = api.get(proxy_url)
+    results_raw = search.get(
+        check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value,
+        "", currency, api_key, proxy_url
+    )
+    return standardize.from_search(results_raw)
