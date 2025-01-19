@@ -3,6 +3,9 @@ from urllib.parse import urlencode
 import pyairbnb.utils as utils
 from curl_cffi import requests
 
+ep_autocomplete = "https://www.airbnb.com/api/v2/autocompletes-personalized"
+ep_market = "https://www.airbnb.com/api/v2/user_markets"
+
 treament = [
 	"feed_map_decouple_m11_treatment",
 	"stays_search_rehydration_treatment_desktop",
@@ -11,6 +14,23 @@ treament = [
 	"selective_query_feed_map_homepage_moweb_treatment",
 ]
 
+headers = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "en",
+    "Cache-Control": "no-cache",
+    "content-type": "application/json",
+    "Connection": "close",
+    "Pragma": "no-cache",
+    "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+    "Sec-Ch-Ua-Mobile": "?0",
+    "Sec-Ch-Ua-Platform": '"Windows"',
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
 
 
 def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, cursor:str, currency:str, api_key:str, proxy_url:str):
@@ -85,27 +105,60 @@ def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, 
             },
         },
     }
-    headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Accept-Language": "en",
-        "Cache-Control": "no-cache",
-        "Connection": "close",
-        "Pragma": "no-cache",
-        "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "X-Airbnb-Api-Key": api_key,
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
+    headers_copy = headers.copy()
+    headers_copy["X-Airbnb-Api-Key"] = api_key
     proxies = {}
     if proxy_url:
         proxies = {"http": proxy_url, "https": proxy_url}
-    response = requests.post(url_parsed, json = inputData, headers=headers, proxies=proxies,  impersonate="chrome110")
+    response = requests.post(url_parsed, json = inputData, headers=headers, proxies=proxies,  impersonate="chrome124")
+    if response.status_code != 200:
+        raise Exception("Not corret status code: ", response.status_code, " response body: ",response.text)
     data = response.json()
     to_return=utils.get_nested_value(data,"data.presentation.staysSearch.results",{})
+    return to_return
+
+def get_markets(currency: str, locale: str, api_key: str, proxy_url: str):
+    query_params = {
+        "locale": locale,
+        "currency": currency,
+        "language": "en",
+    }
+    url_parsed = f"{ep_market}?{urlencode(query_params)}"
+    headers_copy = headers.copy()
+    headers_copy["X-Airbnb-Api-Key"] = api_key
+    proxies = {}
+    if proxy_url:
+        proxies = {"http": proxy_url, "https": proxy_url}
+    response = requests.get(url_parsed, headers=headers_copy, proxies=proxies, impersonate="chrome124")
+    if response.status_code != 200:
+        raise Exception("Not corret status code: ", response.status_code, " response body: ",response.text)
+    data = response.json()
+    return data
+
+def get_places_ids(country: str, location_name: str, currency: str, locale: str, config_token: str, api_key: str, proxy_url: str):
+    query_params = {
+        "currency": currency,
+        "country": country,
+        "key": api_key,
+        "language": "en",
+        "locale": locale,
+        "num_results": 10,
+        "user_input": location_name,
+        "api_version": "1.2.0",
+        "satori_config_token": config_token,
+        "vertical_refinement": "experiences",
+        "region": "-1",
+        "options": "should_filter_by_vertical_refinement%7Chide_nav_results%7Cshould_show_stays%7Csimple_search%7Cflex_destinations_june_2021_launch_web_treatment"
+    }
+    url_parsed = f"{ep_autocomplete}?{urlencode(query_params)}"
+    headers_copy = headers.copy()
+    headers_copy["X-Airbnb-Api-Key"] = api_key
+    proxies = {}
+    if proxy_url:
+        proxies = {"http": proxy_url, "https": proxy_url}
+    response = requests.get(url_parsed, headers=headers_copy, proxies=proxies, impersonate="chrome124")
+    if response.status_code != 200:
+        raise Exception("Not corret status code: ", response.status_code, " response body: ",response.text)
+    data = response.json()
+    to_return=utils.get_nested_value(data,"autocomplete_terms", [])
     return to_return

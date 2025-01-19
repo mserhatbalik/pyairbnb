@@ -4,8 +4,10 @@ import pyairbnb.reviews as reviews
 import pyairbnb.price as price
 import pyairbnb.api as api
 import pyairbnb.search as search
+import pyairbnb.utils as utils
 import pyairbnb.standardize as standardize
-import pyairbnb.calendar as calendar
+import pyairbnb.experience as experience
+import pyairbnb.calendarinfo as calendar
 import pyairbnb.host_details as host_details
 from datetime import datetime
 from urllib.parse import urlparse
@@ -156,3 +158,28 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
         "", currency, api_key, proxy_url
     )
     return standardize.from_search(results_raw)
+
+
+def search_experience_by_taking_the_first_inputs_i_dont_care(user_input_text: str, currency:str, locale: str, check_in:str, check_out:str, api_key:str, proxy_url:str):
+    markets_data = search.get_markets(currency,locale,api_key,proxy_url)
+    markets = utils.get_nested_value(markets_data,"user_markets", [])
+    if len(markets)==0:
+        raise Exception("markets are empty")
+    config_token = utils.get_nested_value(markets[0],"satori_parameters", "")
+    country_code = utils.get_nested_value(markets[0],"country_code", "")
+    if config_token=="" or country_code=="":
+        raise Exception("config_token or country_code are empty")
+    place_ids_results = search.get_places_ids(country_code, user_input_text, currency, locale, config_token, api_key, proxy_url)
+    if len(place_ids_results)==0:
+        raise Exception("empty places ids")
+    place_id = utils.get_nested_value(place_ids_results[0],"location.google_place_id", "")
+    location_name = utils.get_nested_value(place_ids_results[0],"location.location_name", "")
+    if place_id=="" or location_name=="":
+        raise Exception("place_id or location_name are empty")
+    [result,cursor] = experience.search_by_place_id("", place_id, location_name, currency, locale, check_in, check_out, api_key, proxy_url)
+    while cursor!="":
+        [result_tmp,cursor] = experience.search_by_place_id(cursor, place_id, location_name, currency, locale, check_in, check_out, api_key, proxy_url)
+        if len(result_tmp)==0:
+            break
+        result = result + result_tmp
+    return result

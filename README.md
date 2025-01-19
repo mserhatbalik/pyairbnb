@@ -9,7 +9,6 @@ This project is an open-source tool developed in Python for extracting product i
 - Extracts detailed product information from Airbnb
 - Implemented in Python just because it's popular
 - Easy to integrate with existing Python projects
-- The code is optimize to work on this format: ```https://www.airbnb.com/rooms/[room_id]```
 
 ## Legacy
 - This was a project first implemented on:[https://github.com/johnbalvin/pybnb](https://github.com/johnbalvin/pybnb) but was moved to [https://github.com/johnbalvin/pyairbnb](https://github.com/johnbalvin/pyairbnb)
@@ -30,7 +29,7 @@ $ pip install pyairbnb
 ### Example for Searching Listings
 
 ```python
-from pyairbnb.search import search_all
+import pyairbnb
 import json
 
 # Define search parameters
@@ -44,7 +43,7 @@ sw_long = -77.59713412765507  # South-West longitude
 zoom_value = 2  # Zoom level for the map
 
 # Search listings within specified coordinates and date range
-search_results = search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, "")
+search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, "")
 
 # Save the search results as a JSON file
 with open('search_results.json', 'w', encoding='utf-8') as f:
@@ -55,7 +54,7 @@ with open('search_results.json', 'w', encoding='utf-8') as f:
 #### Retrieve Prices, Availability, Reviews, and Host Information
 
 ```python
-from pyairbnb.details import get_details
+import pyairbnb
 import json
 room_url="https://www.airbnb.com/rooms/30931885"
 data = pyairbnb.get_reviews(room_url,"")
@@ -74,19 +73,59 @@ with open('listings.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(listings))
 ```
 
-### Getting experience from user id
+### Getting experiences by just taking the first autocompletions that you would normally do manually on the website
 ```Python
 import pyairbnb
 import json
 check_in = "2025-04-10"
 check_out = "2025-04-12"
+currency = "EUR"
+user_input_text = "Estados Unidos"
+locale = "es"
+proxy_url = ""  # Proxy URL (if needed)
 api_key = pyairbnb.get_api_key("")
-experiences = pyairbnb.search_experience("Estados Unidos",check_in,check_out,"EUR",api_key,"")
+experiences = pyairbnb.experience_search(user_input_text, currency, locale, check_in, check_out, api_key, proxy_url)
 with open('experiences.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(experiences))
 ```
 
-### Getting available/unavailable, along with metadata
+### Getting experiences by first getting the autocompletions
+```Python
+import pyairbnb
+import json
+check_in = "2025-03-06"
+check_out = "2025-03-10"
+currency = "USD"
+user_input_text = "cuenca"
+locale = "pt"
+proxy_url = ""  # Proxy URL (if needed)
+api_key = pyairbnb.get_api_key("")
+markets_data = pyairbnb.get_markets(currency,locale,api_key,proxy_url)
+markets = pyairbnb.get_nested_value(markets_data,"user_markets", [])
+if len(markets)==0:
+    raise Exception("markets are empty")
+config_token = pyairbnb.get_nested_value(markets[0],"satori_parameters", "")
+country_code = pyairbnb.get_nested_value(markets[0],"country_code", "")
+if config_token=="" or country_code=="":
+    raise Exception("config_token or country_code are empty")
+place_ids_results = pyairbnb.get_places_ids(country_code, user_input_text, currency, locale, config_token, api_key, proxy_url)
+if len(place_ids_results)==0:
+    raise Exception("empty places ids")
+place_id = pyairbnb.get_nested_value(place_ids_results[0],"location.google_place_id", "")
+location_name = pyairbnb.get_nested_value(place_ids_results[0],"location.location_name", "")
+if place_id=="" or location_name=="":
+    raise Exception("place_id or location_name are empty")
+[result,cursor] = pyairbnb.experience_search_by_place_id("", place_id, location_name, currency, locale, check_in, check_out, api_key, proxy_url)
+while cursor!="":
+    [result_tmp,cursor] = pyairbnb.experience_search_by_place_id(cursor, place_id, location_name, currency, locale, check_in, check_out, api_key, proxy_url)
+    if len(result_tmp)==0:
+        break
+    result = result + result_tmp
+with open('experiences.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(result))
+```
+
+### Getting available/unavailable homes along with metadata
 ```Python
 import pyairbnb
 import json
@@ -96,7 +135,7 @@ room_url = "https://www.airbnb.com/rooms/1029961446117217643"  # Listing URL
 currency = "USD"  # Currency for the listing details
 
 # Retrieve listing details without including the price information (no check-in/check-out dates)
-data = get_details(room_url=room_url, currency=currency)
+data = pyairbnb.get_details(room_url=room_url, currency=currency)
 
 # Save the retrieved details to a JSON file
 with open('details_data.json', 'w', encoding='utf-8') as f:
@@ -107,17 +146,17 @@ with open('details_data.json', 'w', encoding='utf-8') as f:
 You can also use `get_details` with a room ID and an optional proxy.
 
 ```python
-from pyairbnb.details import get_details
+import pyairbnb
 from urllib.parse import urlparse
 import json
 
 # Define listing parameters
 room_id = 18039593  # Listing room ID
 currency = "MXN"  # Currency for the listing details
-proxy_url = "[your_proxy_url]"  # Proxy URL (if needed)
+proxy_url = ""  # Proxy URL (if needed)
 
 # Retrieve listing details by room ID with a proxy
-data = get_details(room_id=room_id, currency=currency, proxy_url=proxy_url)
+data = pyairbnb.get_details(room_id=room_id, currency=currency, proxy_url=proxy_url)
 
 # Save the retrieved details to a JSON file
 with open('details_data.json', 'w', encoding='utf-8') as f:
@@ -128,15 +167,15 @@ with open('details_data.json', 'w', encoding='utf-8') as f:
 Use `get_reviews` to extract reviews and metadata for a specific listing.
 
 ```python
-from pyairbnb.reviews import get_reviews
+import pyairbnb
 import json
 
 # Define listing URL and proxy URL
 room_url = "https://www.airbnb.com/rooms/30931885"  # Listing URL
-proxy_url = "[your_proxy_url]"  # Proxy URL (if needed)
+proxy_url = ""  # Proxy URL (if needed)
 
 # Retrieve reviews for the specified listing
-reviews_data = get_reviews(room_url, proxy_url)
+reviews_data = pyairbnb.get_reviews(room_url, proxy_url)
 
 # Save the reviews data to a JSON file
 with open('reviews.json', 'w', encoding='utf-8') as f:
@@ -147,15 +186,15 @@ with open('reviews.json', 'w', encoding='utf-8') as f:
 The `get_calendar` function provides availability information for specified listings.
 
 ```python
-from pyairbnb.calendar import get_calendar
+import pyairbnb
 import json
 
 # Define listing parameters
 room_id = "44590727"  # Listing room ID
-proxy_url = "[your_proxy_url]"  # Proxy URL (if needed)
+proxy_url = ""  # Proxy URL (if needed)
 
 # Retrieve availability for the specified listing
-calendar_data = get_calendar(room_id, "", proxy_url)
+calendar_data = pyairbnb.get_calendar(room_id, "", proxy_url)
 
 # Save the calendar data (availability) to a JSON file
 with open('calendar.json', 'w', encoding='utf-8') as f:
