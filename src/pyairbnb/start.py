@@ -12,7 +12,7 @@ import pyairbnb.host_details as host_details
 from datetime import datetime
 from urllib.parse import urlparse
 
-def get_calendar(room_id: str, proxy_url: str = "" ,api_key: str = ""):
+def get_calendar(room_id: str ,api_key: str = "", proxy_url: str = ""):
     """
     Retrieves the calendar data for a specified room.
 
@@ -31,7 +31,7 @@ def get_calendar(room_id: str, proxy_url: str = "" ,api_key: str = ""):
     current_year = datetime.now().year
     return calendar.get(room_id, current_month, current_year, api_key, proxy_url)
 
-def get_reviews(product_id: str, proxy_url: str = "" ,api_key: str = ""):
+def get_reviews(product_id: str , api_key: str = "", proxy_url: str = ""):
     """
     Retrieves review data for a specified product.
 
