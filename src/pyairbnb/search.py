@@ -14,7 +14,7 @@ treament = [
 	"selective_query_feed_map_homepage_moweb_treatment",
 ]
 
-headers = {
+headers_global = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
     "Accept-Language": "en",
     "Cache-Control": "no-cache",
@@ -105,12 +105,12 @@ def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, 
             },
         },
     }
-    headers_copy = headers.copy()
+    headers_copy = headers_global.copy()
     headers_copy["X-Airbnb-Api-Key"] = api_key
     proxies = {}
     if proxy_url:
         proxies = {"http": proxy_url, "https": proxy_url}
-    response = requests.post(url_parsed, json = inputData, headers=headers, proxies=proxies,  impersonate="chrome124")
+    response = requests.post(url_parsed, json = inputData, headers=headers_copy, proxies=proxies,  impersonate="chrome124")
     if response.status_code != 200:
         raise Exception("Not corret status code: ", response.status_code, " response body: ",response.text)
     data = response.json()
@@ -124,7 +124,7 @@ def get_markets(currency: str, locale: str, api_key: str, proxy_url: str):
         "language": "en",
     }
     url_parsed = f"{ep_market}?{urlencode(query_params)}"
-    headers_copy = headers.copy()
+    headers_copy = headers_global.copy()
     headers_copy["X-Airbnb-Api-Key"] = api_key
     proxies = {}
     if proxy_url:
@@ -151,7 +151,7 @@ def get_places_ids(country: str, location_name: str, currency: str, locale: str,
         "options": "should_filter_by_vertical_refinement%7Chide_nav_results%7Cshould_show_stays%7Csimple_search%7Cflex_destinations_june_2021_launch_web_treatment"
     }
     url_parsed = f"{ep_autocomplete}?{urlencode(query_params)}"
-    headers_copy = headers.copy()
+    headers_copy = headers_global.copy()
     headers_copy["X-Airbnb-Api-Key"] = api_key
     proxies = {}
     if proxy_url:
