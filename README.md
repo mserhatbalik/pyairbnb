@@ -62,6 +62,26 @@ with open('reviews.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(data["reviews"]))
 ```
 
+### Getting price
+```python
+import pyairbnb
+import json
+room_url="https://www.airbnb.com/rooms/30931885"
+check_in = "2025-04-10"
+check_out = "2025-04-12"
+proxy_url = ""  # Proxy URL (if needed)
+data, price_input, cookies = pyairbnb.get_metadata_from_url(room_url, proxy_url)
+product_id = price_input["product_id"]
+api_key = price_input["api_key"]
+currency = "USD"
+data = pyairbnb.get_price(product_id, price_input["impression_id"], api_key, currency, cookies,
+            check_in, check_out, proxy_url)
+
+with open('price.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(data))
+```
+
+
 ### Getting listings from user id
 ```Python
 import pyairbnb

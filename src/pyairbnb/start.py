@@ -31,20 +31,21 @@ def get_calendar(room_id: str ,api_key: str = "", proxy_url: str = ""):
     current_year = datetime.now().year
     return calendar.get(room_id, current_month, current_year, api_key, proxy_url)
 
-def get_reviews(product_id: str , api_key: str = "", proxy_url: str = ""):
+def get_reviews(room_url: str , api_key: str = "", proxy_url: str = ""):
     """
     Retrieves review data for a specified product.
 
     Args:
-        product_id (str): The product ID.
+        room_url (str): The product room_url.
         api_key (str): The API key.
         proxy_url (str): The proxy URL.
 
     Returns:
         dict: Reviews data.
     """
-    if not api_key:
-        api_key = api.get(proxy_url)
+    data, price_input, cookies = details.get(room_url, proxy_url)
+    product_id = price_input["product_id"]
+    api_key = price_input["api_key"]
 
     return reviews.get(product_id, api_key, proxy_url)
 
