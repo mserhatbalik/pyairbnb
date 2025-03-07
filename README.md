@@ -199,7 +199,7 @@ reviews_data = pyairbnb.get_reviews(room_url, proxy_url)
 
 # Save the reviews data to a JSON file
 with open('reviews.json', 'w', encoding='utf-8') as f:
-    f.write(json.dumps(reviews_data["reviews"]))  # Extract reviews and save them to a file
+    f.write(json.dumps(reviews_data))  # Extract reviews and save them to a file
 ```
 
 ### Retrieve Availability for a Listing
@@ -218,5 +218,5 @@ calendar_data = pyairbnb.get_calendar(room_id, "", proxy_url)
 
 # Save the calendar data (availability) to a JSON file
 with open('calendar.json', 'w', encoding='utf-8') as f:
-    f.write(json.dumps(calendar_data["calendar"]))  # Extract calendar data and save it to a file
+    f.write(json.dumps(calendar_data))  # Extract calendar data and save it to a file
 ```
