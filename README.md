@@ -51,16 +51,6 @@ with open('search_results.json', 'w', encoding='utf-8') as f:
 ```
 
 ### Retrieving Details for Listings
-#### Retrieve Prices, Availability, Reviews, and Host Information
-
-```python
-import pyairbnb
-import json
-room_url="https://www.airbnb.com/rooms/30931885"
-data = pyairbnb.get_reviews(room_url,"")
-with open('reviews.json', 'w', encoding='utf-8') as f:
-    f.write(json.dumps(data["reviews"]))
-```
 
 ### Getting price
 ```python
