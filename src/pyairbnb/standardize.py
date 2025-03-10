@@ -152,6 +152,9 @@ def from_details(meta):
         "highlights":[],
     }
 
+    gf = meta["data"]["presentation"]["stayProductDetailPage"]["sections"]["sections"][2]["section"]
+    data["is_guest_favorite"] = utils.get_nested_value(gf,"isGuestFavorite",False)
+
     sd = utils.get_nested_value(meta,"data.presentation.stayProductDetailPage.sections.sbuiData")
     for section in utils.get_nested_value(sd,"sectionConfiguration.root.sections",[]):
         typeName=utils.get_nested_value(section,"sectionData.__typename","")
