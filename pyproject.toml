@@ -1,6 +1,6 @@
 [project]
 
-version = '0.0.10'
+version = '0.0.11'
 name="pyairbnb"
 description = 'Airbnb scraper in Python'
 authors = [
