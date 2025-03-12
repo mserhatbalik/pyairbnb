@@ -32,8 +32,7 @@ headers_global = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
 
-
-def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, cursor:str, currency:str, api_key:str, proxy_url:str):
+def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, currency:str, place_type: str, price_min: int, price_max: int, cursor:str, api_key:str, proxy_url:str):
     check_in_date = datetime.strptime(check_in, "%Y-%m-%d")
     check_out_date = datetime.strptime(check_out, "%Y-%m-%d")
 
@@ -73,6 +72,16 @@ def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, 
         {"filterName":"version","filterValues":["1.8.3"]},
         {"filterName":"zoomLevel","filterValues":[str(zoom_value)]},
     ]
+    if place_type is not None and place_type in ("Private room","Entire home/apt"):
+        rawParams.append({"filterName":"room_types","filterValues": [place_type]})
+        rawParams.append({"filterName":"selected_filter_order","filterValues": ["room_types:"+place_type]})
+
+    if price_min is not None and price_min > 0:
+        rawParams.append({"filterName":"price_min","filterValues": [str(price_min)]})
+
+    if price_max is not None and price_max > 0:
+        rawParams.append({"filterName":"price_max","filterValues": [str(price_max)]})
+
     inputData = {
         "operationName":"StaysSearch",
         "extensions":{

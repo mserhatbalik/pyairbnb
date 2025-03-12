@@ -101,7 +101,7 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
     return data
 
 def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, proxy_url: str):
+               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, proxy_url: str):
     """
     Performs a paginated search for all rooms within specified geographic bounds.
 
@@ -124,8 +124,8 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
     cursor = ""
     while True:
         results_raw = search.get(
-            check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value,
-            cursor, currency, api_key, proxy_url
+            check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
+            currency, place_type, price_min, price_max, cursor, api_key, proxy_url
         )
         results = standardize.from_search(results_raw.get("searchResults", []))
         all_results.extend(results)
@@ -134,8 +134,8 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
         cursor = results_raw["paginationInfo"]["nextPageCursor"]
     return all_results
 
-def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: float,
-                      sw_lat: float, sw_long: float, zoom_value: int, currency: str, proxy_url: str):
+def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
+               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, proxy_url: str):
     """
     Searches the first page of results within specified geographic bounds.
 
@@ -155,8 +155,8 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
     """
     api_key = api.get(proxy_url)
     results_raw = search.get(
-        check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value,
-        "", currency, api_key, proxy_url
+            check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
+            currency, place_type, price_min, price_max, "", api_key, proxy_url
     )
     return standardize.from_search(results_raw)
 
