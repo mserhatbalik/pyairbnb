@@ -151,9 +151,15 @@ def from_details(meta):
         "location_descriptions":[],
         "highlights":[],
     }
+    data["is_guest_favorite"] = False
 
-    gf = meta["data"]["presentation"]["stayProductDetailPage"]["sections"]["sections"][2]["section"]
-    data["is_guest_favorite"] = utils.get_nested_value(gf,"isGuestFavorite",False)
+    sections = utils.get_nested_value(meta,"data.presentation.stayProductDetailPage.sections.sections",[])
+    for section in sections:
+        if "section" in section:
+            section_data = utils.get_nested_value(section,"section",{})
+            if "isGuestFavorite" in section_data:
+                data["is_guest_favorite"] = section_data["isGuestFavorite"]
+
 
     sd = utils.get_nested_value(meta,"data.presentation.stayProductDetailPage.sections.sbuiData")
     for section in utils.get_nested_value(sd,"sectionConfiguration.root.sections",[]):
