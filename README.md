@@ -5,7 +5,7 @@ This project is an open-source tool developed in Python for extracting product i
 
 ## Features
 - Extract prices, available dates, reviews, host details and others
-- Full search support
+- Full search support with filtering by amenities
 - Extracts detailed product information from Airbnb
 - Implemented in Python just because it's popular
 - Easy to integrate with existing Python projects
@@ -44,8 +44,10 @@ zoom_value = 2  # Zoom level for the map
 price_min = 1000
 price_max = 0
 place_type = "Private room" #or "Entire home/apt" or empty
+amenities = [4, 7]  # Example: Filter for listings with WiFi and Pool or leave empty
+
 # Search listings within specified coordinates and date range
-search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, place_type, price_min, price_max,  "")
+search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, place_type, price_min, price_max, amenities, "")
 
 # Save the search results as a JSON file
 with open('search_results.json', 'w', encoding='utf-8') as f:

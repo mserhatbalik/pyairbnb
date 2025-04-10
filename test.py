@@ -12,8 +12,9 @@ zoom_value = 2  # Zoom level for the map
 price_min = 3000
 price_max = 0
 place_type = "" #or "Entire home/apt"
-# Search listings within specified coordinates and date range
-search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, place_type, price_min, price_max,  "")
+amenities = [4, 5, 7]  # Example amenities IDs
+# Search listings within specified coordinates and date range with amenities filter
+search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, place_type, price_min, price_max, amenities, "")
 
 # Save the search results as a JSON file
 with open('search_results.json', 'w', encoding='utf-8') as f:
