@@ -104,7 +104,7 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
     return data
 
 def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, proxy_url: str):
+               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, proxy_url: str):
     """
     Performs a paginated search for all rooms within specified geographic bounds.
 
@@ -117,6 +117,7 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
         sw_long (float): Longitude of southwest corner.
         zoom_value (int): Zoom level.
         currency (str): Currency for pricing information.
+        amenities (list): List of amenity IDs to filter
         proxy_url (str): Proxy URL.
 
     Returns:
@@ -128,7 +129,7 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
     while True:
         results_raw = search.get(
             check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
-            currency, place_type, price_min, price_max, cursor, api_key, proxy_url
+            currency, place_type, price_min, price_max, cursor, api_key, amenities, proxy_url
         )
         results = standardize.from_search(results_raw.get("searchResults", []))
         all_results.extend(results)
@@ -138,7 +139,7 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
     return all_results
 
 def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, proxy_url: str):
+               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, proxy_url: str):
     """
     Searches the first page of results within specified geographic bounds.
 
@@ -151,6 +152,7 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
         sw_long (float): Longitude of southwest corner.
         zoom_value (int): Zoom level.
         currency (str): Currency for pricing information.
+        amenities (list): List of amenity IDs to filter
         proxy_url (str): Proxy URL.
 
     Returns:
@@ -159,7 +161,7 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
     api_key = api.get(proxy_url)
     results_raw = search.get(
             check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
-            currency, place_type, price_min, price_max, "", api_key, proxy_url
+            currency, place_type, price_min, price_max, "", api_key, amenities, proxy_url
     )
     return standardize.from_search(results_raw)
 
