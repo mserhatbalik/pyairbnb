@@ -52,7 +52,7 @@ def get_reviews(room_url: str , api_key: str = "", proxy_url: str = "", locale: 
     return reviews.get(product_id, api_key, proxy_url, locale, currency)
 
 def get_details(room_url: str = None, room_id: int = None, domain: str = "www.airbnb.com",
-                currency: str = None, check_in: str = None, check_out: str = None, proxy_url: str = None, locale: str = "en"):
+                currency: str = None, check_in: str = None, check_out: str = None, proxy_url: str = None, locale: str = "en", adults: int = 1):
     """
     Retrieves all details (calendar, reviews, price, and host details) for a specified room.
 
@@ -93,7 +93,7 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
     if check_in and check_out:
         price_data = price.get(
             product_id, price_input["impression_id"], api_key, currency, cookies,
-            check_in, check_out, proxy_url
+            check_in, check_out, proxy_url, adults
         )
         data["price"] = price_data
     
@@ -189,4 +189,3 @@ def search_experience_by_taking_the_first_inputs_i_dont_care(user_input_text: st
             break
         result = result + result_tmp
     return result
-

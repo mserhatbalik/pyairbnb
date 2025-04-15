@@ -19,3 +19,14 @@ search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_la
 # Save the search results as a JSON file
 with open('search_results.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(search_results))  # Convert results to JSON and write to file
+
+room_url = "https://www.airbnb.com/rooms/51752186"  # Listing URL
+currency = "USD"  # Currency for the listing details
+check_in = "2025-07-12"
+check_out = "2025-07-17"
+# Retrieve listing details without including the price information (no check-in/check-out dates)
+data = pyairbnb.get_details(room_url=room_url, currency=currency,adults=4,check_in=check_in,check_out=check_out)
+
+# Save the retrieved details to a JSON file
+with open('details_data.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(data))  # Convert the data to JSON and save it

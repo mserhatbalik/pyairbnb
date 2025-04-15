@@ -145,11 +145,12 @@ import pyairbnb
 import json
 
 # Define listing URL and parameters
-room_url = "https://www.airbnb.com/rooms/1029961446117217643"  # Listing URL
+room_url = "https://www.airbnb.com/rooms/51752186"  # Listing URL
 currency = "USD"  # Currency for the listing details
-
+checkin = "2025-07-12"
+checkout = "2025-07-17"
 # Retrieve listing details without including the price information (no check-in/check-out dates)
-data = pyairbnb.get_details(room_url=room_url, currency=currency)
+data = pyairbnb.get_details(room_url=room_url, currency=currency,adults=2)
 
 # Save the retrieved details to a JSON file
 with open('details_data.json', 'w', encoding='utf-8') as f:
@@ -170,7 +171,9 @@ currency = "MXN"  # Currency for the listing details
 proxy_url = ""  # Proxy URL (if needed)
 
 # Retrieve listing details by room ID with a proxy
-data = pyairbnb.get_details(room_id=room_id, currency=currency, proxy_url=proxy_url)
+checkin = "2025-07-12"
+checkout = "2025-07-17"
+data = pyairbnb.get_details(room_id=room_id, currency=currency, proxy_url=proxy_url,adults=3)
 
 # Save the retrieved details to a JSON file
 with open('details_data.json', 'w', encoding='utf-8') as f:

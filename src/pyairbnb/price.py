@@ -83,21 +83,23 @@ def get(product_id: str, impresion_id: str,api_key: str, currency: str, cookies:
         data = response.json()
 
         sections = utils.get_nested_value(data,"data.presentation.stayProductDetailPage.sections.sections",{})
+        priceGroups = utils.get_nested_value(data,"data.presentation.stayProductDetailPage.sections.metadata.bookingPrefetchData.barPrice.explanationData.priceGroups",[])
+        finalData ={
+            "raw": priceGroups,
+        }
         for section in sections:
             if section['sectionId'] == "BOOK_IT_SIDEBAR":
                 price_data = utils.get_nested_value(section,"section.structuredDisplayPrice",{})
-                finalData={
-                     "main":{
+                finalData["main"]={
                         "price":utils.get_nested_value(price_data,"primaryLine.price",{}),
                         "discountedPrice":utils.get_nested_value(price_data,"primaryLine.discountedPrice",{}),
                         "originalPrice":utils.get_nested_value(price_data,"primaryLine.originalPrice",{}),
                         "qualifier":utils.get_nested_value(price_data,"primaryLine.qualifier",{}),
-                     },
-                     "details":{},
                 }
+                finalData["details"]={}
                 details = utils.get_nested_value(price_data,"explanationData.priceDetails",{})
                 for detail in details:
                     for item in utils.get_nested_value(detail,"items",{}):
                          finalData["details"][item["description"]]=item["priceString"]
                 return finalData
-        return {}
+        return finalData

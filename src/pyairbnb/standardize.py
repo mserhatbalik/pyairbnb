@@ -211,8 +211,10 @@ def from_details(meta):
                         "content": utils.get_nested_value(locationDetail,"content.htmlText"),
                     }
                     data["location_descriptions"].append(seeAllLocationDetail)
-            case "PdpTitleSection":           
+            case "PdpTitleSection":
                     data["title"]=section.get("title","")
+                    if data["title"]=="":
+                        data["title"]=utils.get_nested_value(section,"section.title",[])
             case "PdpHighlightsSection":
                 for highlitingData in utils.get_nested_value(section,"section.highlights",[]):
                     highliting={
