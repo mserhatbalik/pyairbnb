@@ -33,12 +33,6 @@ headers_global = {
 }
 
 def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, currency:str, place_type: str, price_min: int, price_max: int, cursor:str, api_key:str, amenities: list, proxy_url:str):
-    check_in_date = datetime.strptime(check_in, "%Y-%m-%d")
-    check_out_date = datetime.strptime(check_out, "%Y-%m-%d")
-
-    difference = check_out_date - check_in_date
-
-    days = difference.days
 
     base_url = "https://www.airbnb.com/api/v3/StaysSearch/d4d9503616dc72ab220ed8dcf17f166816dccb2593e7b4625c91c3fce3a3b3d6"
     query_params = {
@@ -50,8 +44,6 @@ def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, 
     rawParams=[
         {"filterName":"cdnCacheSafe","filterValues":["false"]},
         {"filterName":"channel","filterValues":["EXPLORE"]},
-        {"filterName":"checkin","filterValues":[check_in]},
-        {"filterName":"checkout","filterValues":[check_out]},
         {"filterName":"datePickerType","filterValues":["calendar"]},
         {"filterName":"flexibleTripLengths","filterValues":["one_week"]},
         {"filterName":"itemsPerGrid","filterValues":["50"]},#if you read this, this is items returned number, this can bex exploited  ;)
@@ -61,7 +53,6 @@ def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, 
         {"filterName":"neLng","filterValues":[str(ne_long)]},
         {"filterName":"placeId","filterValues":["ChIJpTeBx6wjq5oROJeXkPCSSSo"]},
         {"filterName":"priceFilterInputType","filterValues":["0"]},
-        {"filterName":"priceFilterNumNights","filterValues":[str(days)]},
         {"filterName":"query","filterValues":["Galapagos Island, Ecuador"]},
         {"filterName":"screenSize","filterValues":["large"]},
         {"filterName":"refinementPaths","filterValues":["/homes"]},
@@ -72,6 +63,19 @@ def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, 
         {"filterName":"version","filterValues":["1.8.3"]},
         {"filterName":"zoomLevel","filterValues":[str(zoom_value)]},
     ]
+
+    if check_in is not None and len(check_in) > 0 and check_out is not None and len(check_out) > 0:
+        check_in_date = datetime.strptime(check_in, "%Y-%m-%d")
+        check_out_date = datetime.strptime(check_out, "%Y-%m-%d")
+
+        difference = check_out_date - check_in_date
+        days = difference.days
+        rawParams.extend([
+            {"filterName":"checkin","filterValues":[check_in]},
+            {"filterName":"checkout","filterValues":[check_out]},
+            {"filterName":"priceFilterNumNights","filterValues":[str(days)]},
+        ])
+
     if place_type is not None and place_type in ("Private room","Entire home/apt"):
         rawParams.append({"filterName":"room_types","filterValues": [place_type]})
         rawParams.append({"filterName":"selected_filter_order","filterValues": ["room_types:"+place_type]})
