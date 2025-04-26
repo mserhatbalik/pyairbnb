@@ -1,4 +1,3 @@
-
 import pyairbnb.details as details
 import pyairbnb.reviews as reviews
 import pyairbnb.price as price
@@ -189,3 +188,47 @@ def search_experience_by_taking_the_first_inputs_i_dont_care(user_input_text: st
             break
         result = result + result_tmp
     return result
+
+def search_all_from_url(url: str, currency: str = "USD", proxy_url: str = ""):
+    """
+    Wrapper that parses an Airbnb search URL and delegates to search_all.
+    """
+    from urllib.parse import urlparse, parse_qs
+    parsed = urlparse(url)
+    qs = parse_qs(parsed.query)
+
+    # Extract required parameters
+    check_in = qs.get("checkin", [None])[0]
+    check_out = qs.get("checkout", [None])[0]
+    ne_lat = float(qs.get("ne_lat", [0])[0])
+    ne_long = float(qs.get("ne_lng", [0])[0])
+    sw_lat = float(qs.get("sw_lat", [0])[0])
+    sw_long = float(qs.get("sw_lng", [0])[0])
+
+    # Determine zoom value
+    zoom_str = qs.get("zoom_level", qs.get("zoom", [0]))[0]
+    zoom_value = int(float(zoom_str))
+
+    # Price filters
+    price_min = int(qs.get("price_min", [0])[0])
+    price_max = int(qs.get("price_max", [0])[0])
+
+    # Place type filter
+    place_type = qs.get("room_types[]", [None])[0]
+
+    # Amenities list
+    amenities = []
+    for a in qs.get("amenities[]", []):
+        try:
+            amenities.append(int(a))
+        except ValueError:
+            continue
+
+    # Delegate to existing search_all
+    return search_all(
+        check_in, check_out,
+        ne_lat, ne_long, sw_lat, sw_long,
+        zoom_value, currency,
+        place_type, price_min, price_max,
+        amenities, proxy_url
+    )
