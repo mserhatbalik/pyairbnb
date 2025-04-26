@@ -54,6 +54,25 @@ with open('search_results.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(search_results))  # Convert results to JSON and write to file
 ```
 
+### Example: Searching via a full Airbnb URL
+
+```python
+import pyairbnb
+import json
+
+# Define an Airbnb search URL using only the supported parameters
+url = "https://www.airbnb.com/s/Luxembourg--Luxembourg/homes?checkin=2025-07-09&checkout=2025-07-16&ne_lat=49.76537&ne_lng=6.56057&sw_lat=49.31155&sw_lng=6.03263&zoom=10&price_min=22&price_max=100&room_types%5B%5D=Entire%20home%2Fapt&amenities%5B%5D=4&amenities%5B%5D=5"
+
+# Use the URL wrapper
+results = pyairbnb.search_all_from_url(url, currency="USD", proxy_url="")
+
+# Save results and print count
+with open('search_from_url.json', 'w', encoding='utf-8') as f:
+    json.dump(results, f, ensure_ascii=False, indent=2)
+
+print(f"Found {len(results)} listings from URL search.")
+```
+
 ### Retrieving Details for Listings
 
 ### Getting price
