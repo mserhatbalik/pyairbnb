@@ -45,9 +45,9 @@ price_min = 1000
 price_max = 0
 place_type = "Private room" #or "Entire home/apt" or empty
 amenities = [4, 7]  # Example: Filter for listings with WiFi and Pool or leave empty
-
+language = "th"
 # Search listings within specified coordinates and date range
-search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, place_type, price_min, price_max, amenities, "")
+search_results = pyairbnb.search_all(check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, currency, place_type, price_min, price_max, amenities, language, "")
 
 # Save the search results as a JSON file
 with open('search_results.json', 'w', encoding='utf-8') as f:
