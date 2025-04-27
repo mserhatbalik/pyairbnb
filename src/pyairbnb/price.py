@@ -4,7 +4,7 @@ import pyairbnb.utils as utils
 from urllib.parse import urlencode
 ep = "https://www.airbnb.com/api/v3/StaysPdpSections/80c7889b4b0027d99ffea830f6c0d4911a6e863a957cbe1044823f0fc746bf1f"
 
-def get(product_id: str, impresion_id: str,api_key: str, currency: str, cookies: list, checkIn: str, checkOut: str, proxy_url: str, adults: int=1) -> (str):
+def get(api_key: str, cookies: list, impresion_id: str, product_id: str, checkIn: str, checkOut: str, adults: int, currency: str, language: str, proxy_url: str = None) -> (str):
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -62,7 +62,7 @@ def get(product_id: str, impresion_id: str,api_key: str, currency: str, cookies:
         dataRawVariables = json.dumps(variablesData)
         query = {
             "operationName": "StaysPdpSections",
-            "locale": "en",
+            "locale": language,
             "currency": currency,
             "variables": dataRawVariables,
             "extensions": dataRawExtension,
@@ -74,8 +74,7 @@ def get(product_id: str, impresion_id: str,api_key: str, currency: str, cookies:
         if proxy_url:
             proxies = {"http": proxy_url, "https": proxy_url}
 
-        for name in cookies:
-            session.cookies.set(name, cookies[name])
+        session.cookies.update(cookies)
 
         response = session.get(url, headers=headers, proxies=proxies)
         response.raise_for_status()

@@ -2,6 +2,7 @@ from datetime import datetime
 from urllib.parse import urlencode
 import pyairbnb.utils as utils
 from curl_cffi import requests
+import json
 
 ep_autocomplete = "https://www.airbnb.com/api/v2/autocompletes-personalized"
 ep_market = "https://www.airbnb.com/api/v2/user_markets"
@@ -32,12 +33,11 @@ headers_global = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
 
-def get(check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, currency:str, place_type: str, price_min: int, price_max: int, cursor:str, api_key:str, amenities: list, proxy_url:str):
-
+def get(api_key:str, cursor:str, check_in:str, check_out:str, ne_lat:float, ne_long:float, sw_lat:float, sw_long:float, zoom_value:int, currency:str, place_type: str, price_min: int, price_max: int, amenities: list, language: str, proxy_url:str):
     base_url = "https://www.airbnb.com/api/v3/StaysSearch/d4d9503616dc72ab220ed8dcf17f166816dccb2593e7b4625c91c3fce3a3b3d6"
     query_params = {
         "operationName": "StaysSearch",
-        "locale": "en",
+        "locale": language,
         "currency": currency,
     }
     url_parsed = f"{base_url}?{urlencode(query_params)}"

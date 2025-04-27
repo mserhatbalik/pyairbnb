@@ -47,6 +47,7 @@ def from_search(results):
         avgRatingLocalized = utils.get_nested_value(lt,"avgRatingLocalized","")
         splited = avgRatingLocalized.split(" ")
         if len(splited)==2:
+            splited[0] = splited[0].replace(",",".")
             rating = float(splited[0])
             data["rating"]["value"]=rating
             reviewCount = regex_number.search(splited[1]).group()

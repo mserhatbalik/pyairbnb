@@ -6,7 +6,7 @@ import json
 ep = "https://www.airbnb.com/api/v3/PdpAvailabilityCalendar/8f08e03c7bd16fcad3c92a3592c19a8b559a0d0855a84028d1163d4733ed9ade/"
  
 
-def get(room_id: str,month: int, year: int, api_key: str,proxy_url: str) -> str:
+def get(api_key: str, room_id: str, month: int, year: int, proxy_url: str) -> str:
     headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",

@@ -11,7 +11,7 @@ import pyairbnb.host_details as host_details
 from datetime import datetime
 from urllib.parse import urlparse
 
-def get_calendar(room_id: str ,api_key: str = "", proxy_url: str = ""):
+def get_calendar(api_key: str = "", room_id: str = "", proxy_url: str = ""):
     """
     Retrieves the calendar data for a specified room.
 
@@ -28,30 +28,28 @@ def get_calendar(room_id: str ,api_key: str = "", proxy_url: str = ""):
 
     current_month = datetime.now().month
     current_year = datetime.now().year
-    return calendar.get(room_id, current_month, current_year, api_key, proxy_url)
+    return calendar.get(api_key, room_id, current_month, current_year, proxy_url)
 
-def get_reviews(room_url: str , api_key: str = "", proxy_url: str = "", locale: str = "en", currency: str = "USD"):
+def get_reviews(room_url: str ,language: str = "en", proxy_url: str = ""):
     """
     Retrieves review data for a specified product.
 
     Args:
         room_url (str): The product room_url.
-        api_key (str): The API key.
         proxy_url (str): The proxy URL.
-        locale (str): The locale (default is 'en').
+        language (str): The language (default is 'en').
         currency (str): The currency (default is 'USD').
 
     Returns:
         dict: Reviews data.
     """
-    data, price_input, cookies = details.get(room_url, proxy_url)
+    data, price_input, cookies = details.get(room_url, language, proxy_url)
     product_id = price_input["product_id"]
     api_key = price_input["api_key"]
 
-    return reviews.get(product_id, api_key, proxy_url, locale, currency)
+    return reviews.get(api_key, product_id, "USD", language, proxy_url)
 
-def get_details(room_url: str = None, room_id: int = None, domain: str = "www.airbnb.com",
-                currency: str = None, check_in: str = None, check_out: str = None, proxy_url: str = None, locale: str = "en", adults: int = 1):
+def get_details(room_url: str = None, room_id: int = None, domain: str = "www.airbnb.com", check_in: str = None, check_out: str = None, adults: int = 1, currency: str = "USD", language: str = "en", proxy_url: str = None):
     """
     Retrieves all details (calendar, reviews, price, and host details) for a specified room.
 
@@ -62,8 +60,8 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
         currency (str): Currency for pricing information.
         check_in (str): Check-in date for price information.
         check_out (str): Check-out date for price information.
+        language (str): The language (default is 'en').
         proxy_url (str): Proxy URL.
-        locale (str): The locale (default is 'en').
 
     Returns:
         dict: A dictionary with all room details.
@@ -74,7 +72,7 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
     if not room_url:
         room_url = f"https://{domain}/rooms/{room_id}"
     
-    data, price_input, cookies = details.get(room_url, proxy_url)
+    data, price_input, cookies = details.get(room_url, language, proxy_url)
     product_id = price_input["product_id"]
     api_key = price_input["api_key"]
     
@@ -85,25 +83,25 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
         room_id = path.split("/")[-1]
     
     # Get calendar and reviews data
-    data["calendar"] = get_calendar(room_id, api_key, proxy_url)
-    data["reviews"] = reviews.get(product_id, api_key, proxy_url, locale, currency)
+    data["reviews"] = reviews.get(api_key, product_id, currency, language, proxy_url)
+    data["calendar"] = get_calendar(api_key, room_id, proxy_url)
     
     # Get price data if check-in and check-out dates are provided
     if check_in and check_out:
         price_data = price.get(
-            product_id, price_input["impression_id"], api_key, currency, cookies,
-            check_in, check_out, proxy_url, adults
+            api_key, cookies, price_input["impression_id"], product_id, check_in, check_out, adults, 
+            currency, language, proxy_url
         )
         data["price"] = price_data
     
     # Get host details
     host_id = data["host"]["id"]
-    data["host_details"] = host_details.get(host_id, api_key, proxy_url, cookies)
+    data["host_details"] = host_details.get(api_key, cookies, host_id, language, proxy_url)
     
     return data
 
 def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, proxy_url: str):
+               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, language: str, proxy_url: str):
     """
     Performs a paginated search for all rooms within specified geographic bounds.
 
@@ -117,6 +115,7 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
         zoom_value (int): Zoom level.
         currency (str): Currency for pricing information.
         amenities (list): List of amenity IDs to filter
+        language (str): language to use for example en,es,tr ..etc
         proxy_url (str): Proxy URL.
 
     Returns:
@@ -127,8 +126,8 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
     cursor = ""
     while True:
         results_raw = search.get(
-            check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
-            currency, place_type, price_min, price_max, cursor, api_key, amenities, proxy_url
+            api_key, cursor, check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
+            currency, place_type, price_min, price_max, amenities, language, proxy_url
         )
         results = standardize.from_search(results_raw.get("searchResults", []))
         all_results.extend(results)
@@ -138,7 +137,7 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
     return all_results
 
 def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, proxy_url: str):
+               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, language: str, proxy_url: str):
     """
     Searches the first page of results within specified geographic bounds.
 
@@ -152,6 +151,7 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
         zoom_value (int): Zoom level.
         currency (str): Currency for pricing information.
         amenities (list): List of amenity IDs to filter
+        language (str): language to use for example en,es,tr ..etc
         proxy_url (str): Proxy URL.
 
     Returns:
@@ -159,8 +159,8 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
     """
     api_key = api.get(proxy_url)
     results_raw = search.get(
-            check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
-            currency, place_type, price_min, price_max, "", api_key, amenities, proxy_url
+            api_key, "", check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
+            currency, place_type, price_min, price_max, amenities, language, proxy_url
     )
     return standardize.from_search(results_raw)
 
@@ -189,7 +189,7 @@ def search_experience_by_taking_the_first_inputs_i_dont_care(user_input_text: st
         result = result + result_tmp
     return result
 
-def search_all_from_url(url: str, currency: str = "USD", proxy_url: str = ""):
+def search_all_from_url(url: str, currency: str = "USD", language: str = "en", proxy_url: str = ""):
     """
     Wrapper that parses an Airbnb search URL and delegates to search_all.
     """
@@ -230,5 +230,5 @@ def search_all_from_url(url: str, currency: str = "USD", proxy_url: str = ""):
         ne_lat, ne_long, sw_lat, sw_long,
         zoom_value, currency,
         place_type, price_min, price_max,
-        amenities, proxy_url
+        amenities, language, proxy_url
     )
