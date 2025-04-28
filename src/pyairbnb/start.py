@@ -49,7 +49,7 @@ def get_reviews(room_url: str ,language: str = "en", proxy_url: str = ""):
 
     return reviews.get(api_key, product_id, "USD", language, proxy_url)
 
-def get_details(room_url: str = None, room_id: int = None, domain: str = "www.airbnb.com", check_in: str = None, check_out: str = None, adults: int = 1, currency: str = "USD", language: str = "en", proxy_url: str = None):
+def get_details(room_url: str = None, room_id: int = None, domain: str = "www.airbnb.com", check_in: str = None, check_out: str = None, adults: int = 1, currency: str = "USD", language: str = "en", proxy_url: str = ""):
     """
     Retrieves all details (calendar, reviews, price, and host details) for a specified room.
 
@@ -101,7 +101,7 @@ def get_details(room_url: str = None, room_id: int = None, domain: str = "www.ai
     return data
 
 def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, language: str, proxy_url: str):
+               zoom_value: int, price_min: int, price_max: int, place_type: str = "", amenities: list = [], currency: str = "USD", language: str = "en", proxy_url: str = ""):
     """
     Performs a paginated search for all rooms within specified geographic bounds.
 
@@ -137,7 +137,7 @@ def search_all(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_
     return all_results
 
 def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: float, sw_lat: float, sw_long: float,
-               zoom_value: int, currency: str, place_type: str, price_min: int, price_max: int, amenities: list, language: str, proxy_url: str):
+               zoom_value: int, price_min: int, price_max: int, place_type: str = "", amenities: list = [], currency: str = "USD", language: str = "en", proxy_url: str = ""):
     """
     Searches the first page of results within specified geographic bounds.
 
