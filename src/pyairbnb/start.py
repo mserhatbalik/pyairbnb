@@ -162,7 +162,9 @@ def search_first_page(check_in: str, check_out: str, ne_lat: float, ne_long: flo
             api_key, "", check_in, check_out, ne_lat, ne_long, sw_lat, sw_long, zoom_value, 
             currency, place_type, price_min, price_max, amenities, language, proxy_url
     )
-    return standardize.from_search(results_raw)
+
+    results = standardize.from_search(results_raw.get("searchResults", []))
+    return results
 
 
 def search_experience_by_taking_the_first_inputs_i_dont_care(user_input_text: str, currency:str, locale: str, check_in:str, check_out:str, api_key:str, proxy_url:str):
