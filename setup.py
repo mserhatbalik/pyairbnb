@@ -1,6 +1,6 @@
 from setuptools import setup
 
-VERSION = '1.0.4'
+VERSION = '1.0.5'
 DESCRIPTION = 'Airbnb scraper in Python'
 
 setup(
