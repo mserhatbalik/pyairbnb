@@ -230,7 +230,6 @@ def search_all_from_url(url: str, currency: str = "USD", language: str = "en", p
     return search_all(
         check_in, check_out,
         ne_lat, ne_long, sw_lat, sw_long,
-        zoom_value, currency,
-        place_type, price_min, price_max,
-        amenities, language, proxy_url
+        zoom_value, price_min, price_max,
+        place_type, amenities, currency, language, proxy_url
     )
