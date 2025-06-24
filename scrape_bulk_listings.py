@@ -159,7 +159,7 @@ def main():
             # This ensures the delay happens *after* each URL is processed
             # and only if there are more URLs to go.
             if i < len(urls): # Don't wait after the very last URL
-                sleep_time = random.uniform(5, 15) # Random delay between 5 and 15 seconds
+                sleep_time = random.uniform(3, 8) # Random delay between 5 and 15 seconds
                 print(f"--- Pausing for {sleep_time:.2f} seconds before next scrape ---")
                 time.sleep(sleep_time)
         
