@@ -12,3 +12,5 @@ __pycache__
 *.doc
 *.xls
 *.xlsx
+cmd
+libs
