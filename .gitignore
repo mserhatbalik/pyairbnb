@@ -2,6 +2,13 @@
 *dist
 __pycache__
 
-istanbul_listings_analysis.xlsx
-search_results_all_final.json
-airbnb_all_listings_final.txt
+*.xlsx
+*.json
+*.txt
+*.csv
+*.html
+*.pdf
+*.docx
+*.doc
+*.xls
+*.xlsx
