@@ -1,11 +1,13 @@
-# USAGE: python scrape_single_listing.py --url https://www.airbnb.com/rooms/room_id
+# USAGE: python scrape_bulk_listings.py --file listings.txt
 
 import pyairbnb
 import json
 import argparse
 import re
 import pandas as pd
-from typing import Dict, Any
+import time
+import random
+from typing import Dict, Any, List
 
 def save_as_excel(data: Dict[str, Any], filename: str, url: str):
     """
@@ -16,7 +18,7 @@ def save_as_excel(data: Dict[str, Any], filename: str, url: str):
         filename (str): The path for the output Excel file.
         url (str): The original URL for inclusion in the summary.
     """
-    print(f"Creating Excel report at '{filename}'...")
+    print(f"  Creating Excel report at '{filename}'...")
     try:
         with pd.ExcelWriter(filename, engine='openpyxl') as writer:
             # --- 1. Summary Sheet ---
@@ -57,11 +59,8 @@ def save_as_excel(data: Dict[str, Any], filename: str, url: str):
             if data.get('reviews'):
                 reviews_df = pd.json_normalize(data['reviews'])
                 review_cols = {
-                    'createdAt': 'Date',
-                    'comments': 'Comment',
-                    'localizedDate': 'Localized Date',
-                    'reviewer.firstName': 'Reviewer Name',
-                    'response': 'Host Response'
+                    'createdAt': 'Date', 'comments': 'Comment', 'localizedDate': 'Localized Date',
+                    'reviewer.firstName': 'Reviewer Name', 'response': 'Host Response'
                 }
                 reviews_df = reviews_df[[col for col in review_cols.keys() if col in reviews_df.columns]].rename(columns=review_cols)
                 reviews_df.to_excel(writer, sheet_name='Reviews', index=False)
@@ -72,11 +71,9 @@ def save_as_excel(data: Dict[str, Any], filename: str, url: str):
                 for month_data in data['calendar']:
                     for day_data in month_data.get('days', []):
                         calendar_list.append({
-                            'Date': day_data.get('date'),
-                            'Available': day_data.get('available'),
+                            'Date': day_data.get('date'), 'Available': day_data.get('available'),
                             'Price': day_data.get('price', {}).get('nativePrice'),
-                            'Min Nights': day_data.get('minNights'),
-                            'Max Nights': day_data.get('maxNights'),
+                            'Min Nights': day_data.get('minNights'), 'Max Nights': day_data.get('maxNights'),
                         })
                 pd.DataFrame(calendar_list).to_excel(writer, sheet_name='Calendar_Pricing', index=False)
 
@@ -86,8 +83,7 @@ def save_as_excel(data: Dict[str, Any], filename: str, url: str):
                 for group in data['amenities']:
                     for amenity in group.get('values', []):
                         amenities_list.append({
-                            "Group": group.get('title'),
-                            "Amenity": amenity.get('title'),
+                            "Group": group.get('title'), "Amenity": amenity.get('title'),
                             "Is Available": amenity.get('available')
                         })
                 pd.DataFrame(amenities_list).to_excel(writer, sheet_name='Amenities', index=False)
@@ -96,70 +92,83 @@ def save_as_excel(data: Dict[str, Any], filename: str, url: str):
             if data.get('images'):
                 pd.DataFrame(data['images']).to_excel(writer, sheet_name='Photos', index=False)
         
-        print("✅ Excel report saved successfully.")
+        print(f"  ✅ Excel report saved successfully.")
     except Exception as e:
-        print(f"❌ Error creating Excel file: {e}")
+        print(f"  ❌ Error creating Excel file for {url}: {e}")
 
-
-def save_as_json(data: Dict[str, Any], filename: str):
+def process_url(url: str, index: int):
     """
-    Saves the dictionary as a prettified JSON file.
+    Main function to orchestrate the scraping and saving process for a single URL.
     """
-    print(f"Saving raw data to '{filename}'...")
-    try:
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        print("✅ JSON file saved successfully.")
-    except Exception as e:
-        print(f"❌ Error saving JSON file: {e}")
-
-def scrape_and_save(url: str):
-    """
-    Main function to orchestrate the scraping and saving process.
-    """
-    print(f"▶️ Starting scrape for listing: {url}")
+    print(f"\n▶️ Processing URL #{index}: {url}")
 
     match = re.search(r'/rooms/(\d+)', url)
     if not match:
-        print("❌ Error: Could not find a valid listing ID in the URL.")
-        print("Please use a standard Airbnb listing URL, e.g., 'https://www.airbnb.com/rooms/123456'")
+        print(f"  ❌ Error: Could not find a valid listing ID in the URL. Skipping.")
         return
 
     listing_id = match.group(1)
     
     try:
-        listing_details = pyairbnb.get_details(room_url=url)
-        print("✅ Successfully scraped listing details.")
+        # 1. Scrape the data
+        listing_details = pyairbnb.get_details(room_url=url) #
+        print(f"  ✅ Successfully scraped listing details for ID: {listing_id}.")
         
-        json_filename = f"listing_{listing_id}_details.json"
-        excel_filename = f"listing_{listing_id}_details.xlsx"
+        # 2. Define the output filenames based on the new convention
+        excel_filename = f"{index}) {listing_id}.xlsx"
         
-        save_as_json(listing_details, json_filename)
+        # 3. Save the data to the Excel file
         save_as_excel(listing_details, excel_filename, url)
-        
-        print(f"\n🎉 All done! Your files are ready:\n- {json_filename}\n- {excel_filename}")
 
     except Exception as e:
-        print(f"\n❌ An unexpected error occurred during the scraping process: {e}")
-        print("This could be due to an invalid URL, a network issue, or a change in the Airbnb website.")
-
+        print(f"  ❌ An unexpected error occurred while processing {url}: {e}")
+        print("  This could be due to an invalid URL, a network issue, or a change in the Airbnb website.")
 
 def main():
     """
-    Parses command-line arguments and initiates the script.
+    Parses command-line arguments and initiates the bulk scraping process.
     """
+    # ... (the argument parsing code stays the same) ...
     parser = argparse.ArgumentParser(
-        description="Scrape all details from a single Airbnb listing URL and save as JSON and Excel."
+        description="Scrape details from a list of Airbnb listing URLs in a text file and save each as a separate Excel file."
     )
     parser.add_argument(
-        "--url",
+        "--file",
         type=str,
         required=True,
-        help="The full URL of the Airbnb listing to scrape."
+        help="The path to a text file containing Airbnb listing URLs, one per line."
     )
     args = parser.parse_args()
     
-    scrape_and_save(args.url)
+    try:
+        with open(args.file, 'r') as f:
+            urls = [line.strip() for line in f if line.strip()]
+        
+        if not urls:
+            print("The specified file is empty or contains no valid URLs.")
+            return
+            
+        print(f"Found {len(urls)} URLs to process.")
+        
+        # This is the loop we are modifying
+        for i, url in enumerate(urls, 1):
+            # First, process the URL as before
+            process_url(url, i)
+            
+            # THEN, ADD THE DELAY LOGIC HERE
+            # This ensures the delay happens *after* each URL is processed
+            # and only if there are more URLs to go.
+            if i < len(urls): # Don't wait after the very last URL
+                sleep_time = random.uniform(5, 15) # Random delay between 5 and 15 seconds
+                print(f"--- Pausing for {sleep_time:.2f} seconds before next scrape ---")
+                time.sleep(sleep_time)
+        
+        print("\n🎉 All done! Bulk processing complete.")
+
+    except FileNotFoundError:
+        print(f"❌ Error: The file '{args.file}' was not found.")
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
 
 if __name__ == "__main__":
     main()
