@@ -1,3 +1,6 @@
 *pyairbnb.egg-info
 *dist
 __pycache__
+
+istanbul_listings_analysis.xlsx
+search_results_all_final.json
